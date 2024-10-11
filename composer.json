@@ -1,0 +1,16 @@
+{
+    "name": "webimpian/mailniaga-wp-connector",
+    "description": "SMTP plugin for WordPress Email using Mailniaga API",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "psr-4": {
+            "Webimpian\\MailniagaWPConnector\\": "includes/src/"
+        }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.9"
+    },
+    "config": {
+        "vendor-dir": "includes/vendor"
+    }
+}

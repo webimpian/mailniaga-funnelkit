@@ -1,0 +1,86 @@
+<?php
+
+namespace Webimpian\MailniagaWPConnector;
+
+class MailniagaConnector {
+	private static ?MailniagaConnector $instance = null;
+	private MailniagaSettings $settings;
+	private MailniagaEmailSender $email_sender;
+
+	private function __construct() {
+		$this->settings = new MailniagaSettings();
+		$this->email_sender = new MailniagaEmailSender($this->settings->get_settings());
+	}
+
+	public static function get_instance(): ?MailniagaConnector {
+		if (self::$instance === null) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	public function register() {
+		add_action('init', [$this, 'init']);
+
+		$this->settings->register();
+		$this->email_sender->register();
+
+		add_action('admin_post_mailniaga_send_test_email', [$this, 'handle_test_email']);
+		add_action('admin_notices', [$this, 'display_test_email_result']);
+	}
+
+	public function init() {
+		load_plugin_textdomain('mailniaga-wp-connector', false, dirname(MAILNIAGA_WP_CONNECTOR['HOOK']) . '/languages/');
+	}
+
+	public function handle_test_email() {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have sufficient permissions to access this page.'));
+		}
+
+		check_admin_referer('mailniaga_test_email', 'mailniaga_test_email_nonce');
+
+		$to = sanitize_email($_POST['test_email']);
+		$result = $this->email_sender->send_test_email($to);
+
+		$this->save_test_email_result($result);
+
+		wp_redirect(add_query_arg('mailniaga_test_email', '1', admin_url('admin.php?page=mailniaga-wp-connector')));
+		exit;
+	}
+
+	private function save_test_email_result($result) {
+		$status_class = $result['success'] ? 'notice-success' : 'notice-error';
+		$status_message = $result['success'] ? __('Test email sent successfully!', 'mailniaga-wp-connector') : __('Failed to send test email.', 'mailniaga-wp-connector');
+
+		set_transient('mailniaga_test_email_result', [
+			'status_class' => $status_class,
+			'status_message' => $status_message,
+			'time_taken' => $result['time_taken'],
+			'error_message' => $result['error_message'],
+		], 60);
+	}
+
+	public function display_test_email_result() {
+		if (!isset($_GET['page']) || $_GET['page'] !== 'mailniaga-wp-connector' || !isset($_GET['mailniaga_test_email'])) {
+			return;
+		}
+
+		$result = get_transient('mailniaga_test_email_result');
+		if (!$result) {
+			return;
+		}
+
+		delete_transient('mailniaga_test_email_result');
+
+		?>
+        <div class="notice <?php echo esc_attr($result['status_class']); ?> is-dismissible">
+            <p><strong><?php echo esc_html($result['status_message']); ?></strong></p>
+            <p><?php echo esc_html(sprintf(__('Time taken: %s seconds', 'mailniaga-wp-connector'), $result['time_taken'])); ?></p>
+			<?php if (!empty($result['error_message'])): ?>
+                <p><?php echo esc_html(__('Error details:', 'mailniaga-wp-connector') . ' ' . $result['error_message']); ?></p>
+			<?php endif; ?>
+        </div>
+		<?php
+	}
+}
