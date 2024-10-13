@@ -1,6 +1,6 @@
 <?php
 /**
- * Mailniaga WP Connector.
+ * Mail Niaga WP Connector.
  *
  * @author  Web Impian
  * @license GPLv3
@@ -10,10 +10,10 @@
 
 /*
  * @wordpress-plugin
- * Plugin Name:         Mailniaga WP Connector
+ * Plugin Name:         Mail Niaga WP Connector
  * Plugin URI:          https://mailniaga.com
  * Version:             1.0.0
- * Description:         Streamline your WordPress email delivery with Mailniaga API integration. Boost email deliverability, track performance, and ensure reliable SMTP service for all your website's outgoing emails.
+ * Description:         Streamline your WordPress email delivery with Mail Niaga API integration. Boost email deliverability, track performance, and ensure reliable SMTP service for all your website's outgoing emails.
  * Author:              Web Impian
  * Author URI:          https://webimpian.com
  * Requires at least:   5.6
@@ -37,28 +37,33 @@ define(
 		'HOOK'     => plugin_basename(__FILE__),
 		'PATH'     => realpath(plugin_dir_path(__FILE__)),
 		'URL'      => trailingslashit(plugin_dir_url(__FILE__)),
+		'VERSION'  => '1.0.0',
 	]
 );
 
-// Check PHP version
-if (version_compare(PHP_VERSION, '7.4', '<')) {
-	add_action('admin_notices', function() {
-		echo '<div class="error"><p>' . __('Mailniaga WP Connector requires PHP 7.4 or higher.', 'mailniaga-wp-connector') . '</p></div>';
-	});
-	return;
+
+if (!function_exists('as_enqueue_async_action')) {
+	require_once plugin_dir_path(__FILE__) . 'includes/vendor/woocommerce/action-scheduler/action-scheduler.php';
 }
 
-// Load dependencies and initialize the plugin
+add_action('plugins_loaded', function() {
+	if (function_exists('as_enqueue_async_action')) {
+		require_once plugin_dir_path(__FILE__) . 'includes/vendor/woocommerce/action-scheduler/action-scheduler.php';
+	}
+}, 0);
+
 require __DIR__.'/includes/load.php';
+
+
+register_activation_hook(__FILE__, function() {
+	MailniagaDatabaseManager::create_email_queue_table();
+	MailniagaDatabaseManager::create_failed_delivery_table();
+});
 
 add_action('plugins_loaded', function() {
 	MailniagaConnector::get_instance()->register();
 });
 
-// Add action to display test email results
-add_action('mailniaga_display_test_email_result', [MailniagaConnector::get_instance(), 'display_test_email_result']);
-
-// Optional: Add a link to the plugin settings page in the plugins list
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), function($links) {
 	$settings_link = '<a href="' . admin_url('admin.php?page=mailniaga-wp-connector') . '">' . __('Settings', 'mailniaga-wp-connector') . '</a>';
 	array_unshift($links, $settings_link);

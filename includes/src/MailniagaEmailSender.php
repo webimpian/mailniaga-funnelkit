@@ -13,43 +13,96 @@ class MailniagaEmailSender {
 		$this->settings = $settings;
 		$this->client = new Client([
 			'base_uri' => 'https://api.mailniaga.mx/api/v0/',
-			'timeout'  => 10.0,
+			'timeout'  => 99999999999999999, // Reduced timeout for individual requests
 		]);
 	}
 
 	public function register() {
-		add_filter('pre_wp_mail', [$this, 'send_mail'], 10, 2);
+		add_filter('pre_wp_mail', [$this, 'queue_mail'], 10, 2);
+		add_action('init', [$this, 'schedule_queue_processing']);
+		add_action('process_mailniaga_email_queue', [$this, 'process_email_queue']);
 	}
 
-	public function send_mail($null, $atts): bool {
-		if (empty($this->settings['api_key'])) {
-			error_log('Mailniaga API Error: API key is not set');
+	public function queue_mail($null, $atts): bool {
+		global $wpdb;
+
+		$to = is_array($atts['to']) ? implode(',', $atts['to']) : $atts['to'];
+		$headers = $this->parse_headers($atts['headers']);
+
+		$from_email = $this->get_from_email($headers);
+		$from_name = $this->get_from_name($headers);
+
+		$table_name = $wpdb->prefix . 'mailniaga_email_queue';
+		$result = $wpdb->insert(
+			$table_name,
+			[
+				'to_email' => $to,
+				'from_email' => $from_email,
+				'from_name' => $from_name,
+				'subject' => $atts['subject'],
+				'message' => $atts['message'],
+				'headers' => serialize($headers),
+				'attachments' => serialize($atts['attachments'] ?? []),
+				'status' => 'queued',
+				'created_at' => current_time('mysql'),
+			]
+		);
+
+		if ($result === false) {
+			$this->log("Failed to queue email to: $to, subject: {$atts['subject']}. DB Error: " . $wpdb->last_error);
 			return false;
 		}
 
-		$to = is_array($atts['to']) ? $atts['to'] : [$atts['to']];
-		$headers = $this->parse_headers($atts['headers']);
+		$this->log("Email queued successfully. To: $to, Subject: {$atts['subject']}");
+		return true;
+	}
 
-		// Use the provided From email and name if available, otherwise use default settings
-		$from_email = $this->get_from_email($headers);
-		$from_name = $this->get_from_name($headers);
-		$from = $from_name ? sprintf('%s <%s>', $from_name, $from_email) : $from_email;
+	public function schedule_queue_processing() {
+		if (!as_next_scheduled_action('process_mailniaga_email_queue')) {
+			as_schedule_recurring_action(time(), 1, 'process_mailniaga_email_queue');
+			//$this->log("Email queue processing scheduled");
+		}
+	}
+
+	public function process_email_queue() {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'mailniaga_email_queue';
+
+		$emails = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE status = 'queued' ORDER BY created_at ASC LIMIT %d",
+				100
+			)
+		);
+
+		//$this->log("Processing " . count($emails) . " emails from queue");
+
+		foreach ($emails as $email) {
+			$this->send_queued_email($email);
+		}
+	}
+
+	private function send_queued_email($email) {
+		$to = explode(',', $email->to_email);
+		$headers = unserialize($email->headers);
 
 		$data = [
-			'from' => $from,
+			'from' => sprintf('%s <%s>', $email->from_name, $email->from_email),
 			'to' => $to,
 			'reply_to' => $headers['reply-to'] ?? '',
-			'subject' => $atts['subject'],
+			'subject' => $email->subject,
 			'as_html' => 1,
-			'content' => $atts['message'],
+			'content' => $email->message,
 		];
 
 		if (!empty($headers['content-type']) && strpos($headers['content-type'], 'text/plain') !== false) {
-			$data['content_plain'] = $atts['message'];
+			$data['content_plain'] = $email->message;
 			unset($data['content']);
 		}
 
 		try {
+			//$this->log("Sending email ID: {$email->id} to: {$email->to_email}");
+
 			$response = $this->client->request('POST', 'messages', [
 				'headers' => [
 					'Content-Type' => 'application/json',
@@ -59,22 +112,40 @@ class MailniagaEmailSender {
 			]);
 
 			$result = json_decode($response->getBody(), true);
-			error_log('Mailniaga API Response: ' . json_encode($result));
 
 			if ($result['error'] || $result['status_code'] !== 200) {
 				throw new \Exception('Failed to send email: ' . ($result['message'] ?? 'Unknown error'));
 			}
 
-			error_log('Mailniaga API Success: Email sent successfully to ' . $result['data']['total_recipient'] . ' recipient(s)');
-			return true;
+			$this->update_email_status($email->id, 'sent');
+			//$this->log("Email ID: {$email->id} sent successfully");
 		} catch (GuzzleException $e) {
-			error_log('Mailniaga API Error: ' . $e->getMessage());
-			error_log('Request data: ' . json_encode($data));
-			return false;
+			$this->log("Mailniaga API Error for email ID: {$email->id}: " . $e->getMessage(), 'error');
+			$this->update_email_status($email->id, 'failed', $e->getMessage());
 		} catch (\Exception $e) {
-			error_log('Mailniaga Send Error: ' . $e->getMessage());
-			error_log('Request data: ' . json_encode($data));
-			return false;
+			$this->log("Mailniaga Send Error for email ID: {$email->id}: " . $e->getMessage(), 'error');
+			$this->update_email_status($email->id, 'failed', $e->getMessage());
+		}
+	}
+
+	private function update_email_status($email_id, $status, $error_message = null) {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'mailniaga_email_queue';
+
+		$result = $wpdb->update(
+			$table_name,
+			[
+				'status' => $status,
+				'error_message' => $error_message,
+				'updated_at' => current_time('mysql'),
+			],
+			['id' => $email_id]
+		);
+
+		if ($result === false) {
+			$this->log("Failed to update status for email ID: $email_id. DB Error: " . $wpdb->last_error, 'error');
+		} else {
+			$this->log("Updated status for email ID: $email_id to: $status");
 		}
 	}
 
@@ -142,6 +213,12 @@ class MailniagaEmailSender {
 		$end_time = microtime(true);
 		$time_taken = round($end_time - $start_time, 3);
 
+		if ($result) {
+			$this->log("Test email sent successfully to: $to");
+		} else {
+			$this->log("Failed to send test email to: $to", 'error');
+		}
+
 		return [
 			'success' => $result,
 			'time_taken' => $time_taken,
@@ -157,5 +234,10 @@ class MailniagaEmailSender {
 			}
 		}
 		return 'Unknown error';
+	}
+
+	private function log($message, $level = 'info') {
+		$log_message = "[Mailniaga WP Connector] [$level] $message";
+		error_log($log_message);
 	}
 }

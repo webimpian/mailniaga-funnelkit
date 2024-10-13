@@ -6,10 +6,24 @@ class MailniagaConnector {
 	private static ?MailniagaConnector $instance = null;
 	private MailniagaSettings $settings;
 	private MailniagaEmailSender $email_sender;
+	private MailniagaEmailLog $email_log;
+	private WebhookHandler $webhook_handler;
+	private MailniagaUnsubscribeFunnelKit $unsubscribe_cron;
+	private MailniagaFailedDeliveriesLog $failed_deliveries_log;
+	private MailniagaEmailLogCleaner $email_log_cleaner;
+	private MailniagaCheckBalance $check_balance;
+
+
 
 	private function __construct() {
 		$this->settings = new MailniagaSettings();
 		$this->email_sender = new MailniagaEmailSender($this->settings->get_settings());
+		$this->email_log = new MailniagaEmailLog();
+		$this->webhook_handler = new WebhookHandler($this->settings);
+		$this->unsubscribe_cron = new MailniagaUnsubscribeFunnelKit();
+		$this->failed_deliveries_log = new MailniagaFailedDeliveriesLog();
+		$this->email_log_cleaner = new MailniagaEmailLogCleaner();
+		$this->check_balance = new MailniagaCheckBalance($this->settings);
 	}
 
 	public static function get_instance(): ?MailniagaConnector {
@@ -24,9 +38,17 @@ class MailniagaConnector {
 
 		$this->settings->register();
 		$this->email_sender->register();
+		$this->email_log->register();
+		$this->unsubscribe_cron->register();
+		$this->failed_deliveries_log->register();
+		$this->email_log_cleaner->register();
+		$this->check_balance->register();
 
 		add_action('admin_post_mailniaga_send_test_email', [$this, 'handle_test_email']);
 		add_action('admin_notices', [$this, 'display_test_email_result']);
+
+		// Add AJAX action for email details
+		add_action('wp_ajax_mailniaga_get_email_details', [$this->email_log, 'get_email_details']);
 	}
 
 	public function init() {
