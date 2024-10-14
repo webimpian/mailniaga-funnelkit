@@ -42,24 +42,65 @@ class MailniagaSmtp {
 	}
 
 	public function create_admin_page() {
+		// Check user capabilities
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'mailniaga-smtp'));
+		}
+
+		// Handle form submission
+		if (isset($_POST['submit']) && check_admin_referer('mailniaga_smtp_settings', 'mailniaga_smtp_nonce')) {
+			// Process and save settings
+			$this->settings->save_options($_POST);
+			add_settings_error('mailniaga_smtp_messages', 'mailniaga_smtp_message', __('Settings Saved', 'mailniaga-smtp'), 'updated');
+		}
+
+		$active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
 		?>
-        <div class="wrap">
-            <h1>Mail Niaga SMTP Settings</h1>
-            <form method="post" action="options.php">
+        <div class="wrap mailniaga-smtp-wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+			<?php settings_errors('mailniaga_smtp_messages'); ?>
+            <h2 class="nav-tab-wrapper">
+                <a href="<?php echo esc_url(add_query_arg(['page' => 'mailniaga-smtp', 'tab' => 'general'], admin_url('admin.php'))); ?>" class="nav-tab <?php echo $active_tab == 'general' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('General', 'mailniaga-smtp'); ?></a>
+                <a href="<?php echo esc_url(add_query_arg(['page' => 'mailniaga-smtp', 'tab' => 'smtp'], admin_url('admin.php'))); ?>" class="nav-tab <?php echo $active_tab == 'smtp' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('SMTP', 'mailniaga-smtp'); ?></a>
+                <a href="<?php echo esc_url(add_query_arg(['page' => 'mailniaga-smtp', 'tab' => 'api'], admin_url('admin.php'))); ?>" class="nav-tab <?php echo $active_tab == 'api' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('API', 'mailniaga-smtp'); ?></a>
+            </h2>
+            <form method="post" action="">
 				<?php
+				// Output security fields
 				settings_fields('mailniaga_smtp_option_group');
-				do_settings_sections('mailniaga-smtp-admin');
-				submit_button();
+				// Output nonce field
+				wp_nonce_field('mailniaga_smtp_settings', 'mailniaga_smtp_nonce');
 				?>
+                <div class="tab-content">
+                    <div id="general-settings" class="tab-pane" style="display: <?php echo $active_tab == 'general' ? 'block' : 'none'; ?>">
+                        <h2><?php echo esc_html__('General Settings', 'mailniaga-smtp'); ?></h2>
+                        <table class="form-table">
+							<?php do_settings_fields('mailniaga-smtp-admin', 'mailniaga_general_section'); ?>
+                        </table>
+                    </div>
+                    <div id="smtp-settings" class="tab-pane" style="display: <?php echo $active_tab == 'smtp' ? 'block' : 'none'; ?>">
+                        <h2><?php echo esc_html__('SMTP Settings', 'mailniaga-smtp'); ?></h2>
+                        <table class="form-table">
+							<?php do_settings_fields('mailniaga-smtp-admin', 'mailniaga_smtp_section'); ?>
+                        </table>
+                    </div>
+                    <div id="api-settings" class="tab-pane" style="display: <?php echo $active_tab == 'api' ? 'block' : 'none'; ?>">
+                        <h2><?php echo esc_html__('API Settings', 'mailniaga-smtp'); ?></h2>
+                        <table class="form-table">
+							<?php do_settings_fields('mailniaga-smtp-admin', 'mailniaga_api_section'); ?>
+                        </table>
+                    </div>
+                </div>
+				<?php submit_button(); ?>
             </form>
             <hr>
-            <h2>Test Email</h2>
-            <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+            <h2><?php echo esc_html__('Test Email', 'mailniaga-smtp'); ?></h2>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="mailniaga_smtp_test_email">
 				<?php wp_nonce_field('mailniaga_smtp_test_email', 'mailniaga_smtp_test_email_nonce'); ?>
                 <p>
-                    <input type="email" name="test_email" placeholder="Enter recipient email" required>
-					<?php submit_button('Send Test Email', 'secondary', 'submit', false); ?>
+                    <input type="email" name="test_email" placeholder="<?php echo esc_attr__('Enter recipient email', 'mailniaga-smtp'); ?>" required>
+					<?php submit_button(__('Send Test Email', 'mailniaga-smtp'), 'secondary', 'submit_test_email', false); ?>
                 </p>
             </form>
         </div>
@@ -69,28 +110,32 @@ class MailniagaSmtp {
 	public function send_test_email() {
 		if (
 			!isset($_POST['mailniaga_smtp_test_email_nonce']) ||
-			!wp_verify_nonce($_POST['mailniaga_smtp_test_email_nonce'], 'mailniaga_smtp_test_email')
+			!wp_verify_nonce(sanitize_key(wp_unslash($_POST['mailniaga_smtp_test_email_nonce'])), 'mailniaga_smtp_test_email')
 		) {
-			wp_die('Invalid nonce');
+			wp_die(esc_html__('Invalid nonce', 'mailniaga-smtp'));
 		}
 
 		if (!current_user_can('manage_options')) {
-			wp_die('Unauthorized access');
+			wp_die(esc_html__('Unauthorized access', 'mailniaga-smtp'));
 		}
 
-		$to = sanitize_email($_POST['test_email']);
-		$subject = 'Mail Niaga SMTP Test Email';
-		$message = 'This is a test email sent from your WordPress site using Mail Niaga SMTP plugin.';
+		$to = isset($_POST['test_email']) ? sanitize_email(wp_unslash($_POST['test_email'])) : '';
+		if (empty($to)) {
+			wp_die(esc_html__('Invalid email address', 'mailniaga-smtp'));
+		}
+
+		$subject = esc_html__('Mail Niaga SMTP Test Email', 'mailniaga-smtp');
+		$message = esc_html__('This is a test email sent from your WordPress site using Mail Niaga SMTP plugin.', 'mailniaga-smtp');
 		$headers = array('Content-Type: text/html; charset=UTF-8');
 
 		$result = wp_mail($to, $subject, $message, $headers);
 
 		if ($result) {
 			$status = 'success';
-			$message = 'Test email sent successfully!';
+			$message = esc_html__('Test email sent successfully!', 'mailniaga-smtp');
 		} else {
 			$status = 'error';
-			$message = 'Failed to send test email. Please check your settings.';
+			$message = esc_html__('Failed to send test email. Please check your settings.', 'mailniaga-smtp');
 		}
 
 		wp_safe_redirect(add_query_arg(
@@ -99,7 +144,7 @@ class MailniagaSmtp {
 				'status' => $status,
 				'message' => urlencode($message)
 			),
-			admin_url('options-general.php')
+			admin_url('admin.php')
 		));
 		exit;
 	}
@@ -108,9 +153,9 @@ class MailniagaSmtp {
 		$options = $this->settings->get_options();
 
 		$phpmailer->isSMTP();
-		$phpmailer->Host = $options['smtp_host'];
+		$phpmailer->Host = !empty($options['smtp_host']) ? $options['smtp_host'] : 'smtp.mailniaga.mx';
 		$phpmailer->SMTPAuth = true;
-		$phpmailer->Port = $options['smtp_port'];
+		$phpmailer->Port = !empty($options['smtp_port']) ? $options['smtp_port'] : '2524';
 		$phpmailer->Username = $options['smtp_username'];
 		$phpmailer->Password = $options['smtp_password'];
 
@@ -139,7 +184,7 @@ class MailniagaSmtp {
 				'Content-Type' => 'application/json',
 				'X-API-Key' => $options['api_key']
 			],
-			'body' => json_encode($data)
+			'body' => wp_json_encode($data)
 		]);
 
 		if (is_wp_error($response)) {
@@ -160,7 +205,7 @@ class MailniagaSmtp {
 		$options = $this->settings->get_options();
 		$from_email = !empty($options['from_email']) ? $options['from_email'] : get_option('admin_email');
 		$from_name = !empty($options['from_name']) ? $options['from_name'] : get_option('blogname');
-		return "$from_name <$from_email>";
+		return sprintf('%s <%s>', $from_name, $from_email);
 	}
 
 	public function set_from_email($email) {

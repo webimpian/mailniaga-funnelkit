@@ -41,21 +41,21 @@ class MailniagaSettings {
 
 		add_settings_section(
 			'mailniaga_general_section',
-			'General Settings',
+			esc_html__('General Settings', 'mailniaga-smtp'),
 			[$this, 'general_section_info'],
 			'mailniaga-smtp-admin'
 		);
 
 		add_settings_section(
 			'mailniaga_smtp_section',
-			'SMTP Settings',
+			esc_html__('SMTP Settings', 'mailniaga-smtp'),
 			[$this, 'smtp_section_info'],
 			'mailniaga-smtp-admin'
 		);
 
 		add_settings_section(
 			'mailniaga_api_section',
-			'API Settings',
+			esc_html__('API Settings', 'mailniaga-smtp'),
 			[$this, 'api_section_info'],
 			'mailniaga-smtp-admin'
 		);
@@ -67,7 +67,7 @@ class MailniagaSettings {
 		// General Settings
 		add_settings_field(
 			'mailing_method',
-			'Mailing Method',
+			esc_html__('Mailing Method', 'mailniaga-smtp'),
 			[$this, 'mailing_method_callback'],
 			'mailniaga-smtp-admin',
 			'mailniaga_general_section'
@@ -75,13 +75,11 @@ class MailniagaSettings {
 
 		// SMTP Settings
 		$smtp_fields = [
-			'smtp_host' => 'SMTP Host',
-			'smtp_port' => 'SMTP Port',
-			'smtp_username' => 'SMTP Username',
-			'smtp_password' => 'SMTP Password',
-			'smtp_encryption' => 'SMTP Encryption',
-			'from_email' => 'From Email',
-			'from_name' => 'From Name'
+			'smtp_host' => esc_html__('SMTP Host', 'mailniaga-smtp'),
+			'smtp_port' => esc_html__('SMTP Port', 'mailniaga-smtp'),
+			'smtp_username' => esc_html__('SMTP Username', 'mailniaga-smtp'),
+			'smtp_password' => esc_html__('SMTP Password', 'mailniaga-smtp'),
+			'smtp_encryption' => esc_html__('SMTP Encryption', 'mailniaga-smtp'),
 		];
 
 		foreach ($smtp_fields as $field => $title) {
@@ -97,10 +95,27 @@ class MailniagaSettings {
 		// API Settings
 		add_settings_field(
 			'api_key',
-			'API Key',
+			esc_html__('API Key', 'mailniaga-smtp'),
 			[$this, 'api_key_callback'],
 			'mailniaga-smtp-admin',
 			'mailniaga_api_section'
+		);
+
+		// From Settings (added to General section)
+		add_settings_field(
+			'from_email',
+			esc_html__('From Email', 'mailniaga-smtp'),
+			[$this, 'from_email_callback'],
+			'mailniaga-smtp-admin',
+			'mailniaga_general_section'
+		);
+
+		add_settings_field(
+			'from_name',
+			esc_html__('From Name', 'mailniaga-smtp'),
+			[$this, 'from_name_callback'],
+			'mailniaga-smtp-admin',
+			'mailniaga_general_section'
 		);
 	}
 
@@ -122,34 +137,34 @@ class MailniagaSettings {
 	}
 
 	public function general_section_info() {
-		echo 'Choose between SMTP and API:';
+		echo esc_html__('Choose between SMTP and API:', 'mailniaga-smtp');
 	}
 
 	public function smtp_section_info() {
-		echo 'Enter your Mail Niaga SMTP settings below:';
+		echo esc_html__('Enter your Mail Niaga SMTP settings below:', 'mailniaga-smtp');
 	}
 
 	public function api_section_info() {
-		echo 'Enter your Mail Niaga API settings below:';
+		echo esc_html__('Enter your Mail Niaga API settings below:', 'mailniaga-smtp');
 	}
 
 	public function mailing_method_callback() {
 		$method = $this->options['mailing_method'] ?? 'smtp';
 		?>
-		<label>
-			<input type="radio" name="<?php echo $this->option_name; ?>[mailing_method]" value="smtp" <?php checked($method, 'smtp'); ?>>
-			SMTP
-		</label>
-		<label>
-			<input type="radio" name="<?php echo $this->option_name; ?>[mailing_method]" value="api" <?php checked($method, 'api'); ?>>
-			API
-		</label>
+        <label>
+            <input type="radio" name="<?php echo esc_attr($this->option_name); ?>[mailing_method]" value="smtp" <?php checked($method, 'smtp'); ?>>
+			<?php esc_html_e('SMTP', 'mailniaga-smtp'); ?>
+        </label>
+        <label>
+            <input type="radio" name="<?php echo esc_attr($this->option_name); ?>[mailing_method]" value="api" <?php checked($method, 'api'); ?>>
+			<?php esc_html_e('API', 'mailniaga-smtp'); ?>
+        </label>
 		<?php
 	}
 
 	public function smtp_host_callback() {
 		echo '<input type="text" id="smtp_host" value="smtp.mailniaga.mx" disabled>';
-		echo '<input type="hidden" name="' . $this->option_name . '[smtp_host]" value="smtp.mailniaga.mx">';
+		echo '<input type="hidden" name="' . esc_attr($this->option_name) . '[smtp_host]" value="smtp.mailniaga.mx">';
 	}
 
 	public function smtp_port_callback() {
@@ -167,24 +182,24 @@ class MailniagaSettings {
 	public function smtp_encryption_callback() {
 		$encryption = $this->options['smtp_encryption'] ?? 'none';
 		?>
-		<select name="<?php echo $this->option_name; ?>[smtp_encryption]" id="smtp_encryption">
-			<option value="none" <?php selected($encryption, 'none'); ?>>None</option>
-			<option value="ssl" <?php selected($encryption, 'ssl'); ?>>SSL</option>
-			<option value="tls" <?php selected($encryption, 'tls'); ?>>TLS</option>
-		</select>
+        <select name="<?php echo esc_attr($this->option_name); ?>[smtp_encryption]" id="smtp_encryption">
+            <option value="none" <?php selected($encryption, 'none'); ?>><?php esc_html_e('None', 'mailniaga-smtp'); ?></option>
+            <option value="ssl" <?php selected($encryption, 'ssl'); ?>><?php esc_html_e('SSL', 'mailniaga-smtp'); ?></option>
+            <option value="tls" <?php selected($encryption, 'tls'); ?>><?php esc_html_e('TLS', 'mailniaga-smtp'); ?></option>
+        </select>
 		<?php
 	}
 
 	public function from_email_callback() {
 		$default_email = get_option('admin_email');
 		$this->text_field_callback('from_email', $default_email, 'email');
-		echo '<p class="description">Default: ' . esc_html($default_email) . '</p>';
+		echo '<p class="description">' . esc_html__('Default:', 'mailniaga-smtp') . ' ' . esc_html($default_email) . '</p>';
 	}
 
 	public function from_name_callback() {
 		$default_name = get_option('blogname');
 		$this->text_field_callback('from_name', $default_name);
-		echo '<p class="description">Default: ' . esc_html($default_name) . '</p>';
+		echo '<p class="description">' . esc_html__('Default:', 'mailniaga-smtp') . ' ' . esc_html($default_name) . '</p>';
 	}
 
 	public function api_key_callback() {
@@ -194,10 +209,10 @@ class MailniagaSettings {
 	private function text_field_callback($field, $default = '', $type = 'text') {
 		printf(
 			'<input type="%s" name="%s[%s]" id="%s" value="%s" placeholder="%s">',
-			$type,
-			$this->option_name,
-			$field,
-			$field,
+			esc_attr($type),
+			esc_attr($this->option_name),
+			esc_attr($field),
+			esc_attr($field),
 			isset($this->options[$field]) ? esc_attr($this->options[$field]) : '',
 			esc_attr($default)
 		);

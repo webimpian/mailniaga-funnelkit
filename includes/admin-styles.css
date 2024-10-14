@@ -1,0 +1,59 @@
+.mailniaga-smtp-wrap .nav-tab-wrapper {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+.mailniaga-smtp-wrap .nav-tab {
+    border: 1px solid #ccc;
+    border-bottom: none;
+    background: #e5e5e5;
+    color: #555;
+    font-size: 14px;
+    line-height: 24px;
+    padding: 6px 10px;
+    font-weight: 600;
+    margin: 0 5px -1px 0;
+    text-decoration: none;
+}
+.mailniaga-smtp-wrap .nav-tab-active {
+    border-bottom: 1px solid #f1f1f1;
+    background: #f1f1f1;
+    color: #000;
+}
+.mailniaga-smtp-wrap .tab-content {
+    background: #f1f1f1;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+/* Styles for input fields */
+.mailniaga-smtp-wrap .form-table input[type="text"],
+.mailniaga-smtp-wrap .form-table input[type="email"],
+.mailniaga-smtp-wrap .form-table input[type="password"],
+.mailniaga-smtp-wrap .form-table select {
+    width: 50%;
+    max-width: 25em;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .mailniaga-smtp-wrap .form-table input[type="text"],
+    .mailniaga-smtp-wrap .form-table input[type="email"],
+    .mailniaga-smtp-wrap .form-table input[type="password"],
+    .mailniaga-smtp-wrap .form-table select {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Additional styles for better layout */
+.mailniaga-smtp-wrap .form-table th {
+    width: 200px;
+    padding: 20px 10px;
+}
+.mailniaga-smtp-wrap .form-table td {
+    padding: 15px 10px;
+}
+.mailniaga-smtp-wrap h2 {
+    margin-top: 0;
+}
