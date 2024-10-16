@@ -3,7 +3,7 @@
 namespace Webimpian\MailniagaWPConnector;
 
 class MailniagaCheckBalance {
-	private $settings;
+	private MailniagaSettings $settings;
 
 	public function __construct(MailniagaSettings $settings) {
 		$this->settings = $settings;
@@ -18,7 +18,7 @@ class MailniagaCheckBalance {
 	public function add_cron_interval($schedules) {
 		$schedules['mailniaga_every_minute'] = array(
 			'interval' => 60,
-			'display'  => __('Every Minute', 'mailniaga-wp-connector')
+			'display'  => __('Every Minute', 'mailniaga-smtp')
 		);
 		return $schedules;
 	}

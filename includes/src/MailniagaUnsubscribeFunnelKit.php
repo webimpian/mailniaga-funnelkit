@@ -3,7 +3,7 @@
 namespace Webimpian\MailniagaWPConnector;
 
 class MailniagaUnsubscribeFunnelKit {
-	private $log_file;
+	private string $log_file;
 
 	public function __construct() {
 		$this->log_file = WP_CONTENT_DIR . '/mailniaga-unsubscribe.log';

@@ -52,7 +52,7 @@ class MailniagaConnector {
 	}
 
 	public function init() {
-		load_plugin_textdomain('mailniaga-wp-connector', false, dirname(MAILNIAGA_WP_CONNECTOR['HOOK']) . '/languages/');
+		load_plugin_textdomain('mailniaga-smtp', false, dirname(MAILNIAGA_WP_CONNECTOR['HOOK']) . '/languages/');
 	}
 
 	public function handle_test_email() {
@@ -67,13 +67,13 @@ class MailniagaConnector {
 
 		$this->save_test_email_result($result);
 
-		wp_redirect(add_query_arg('mailniaga_test_email', '1', admin_url('admin.php?page=mailniaga-wp-connector')));
+		wp_redirect(add_query_arg('mailniaga_test_email', '1', admin_url('admin.php?page=mailniaga-smtp')));
 		exit;
 	}
 
 	private function save_test_email_result($result) {
 		$status_class = $result['success'] ? 'notice-success' : 'notice-error';
-		$status_message = $result['success'] ? __('Test email sent successfully!', 'mailniaga-wp-connector') : __('Failed to send test email.', 'mailniaga-wp-connector');
+		$status_message = $result['success'] ? __('Test email sent successfully!', 'mailniaga-smtp') : __('Failed to send test email.', 'mailniaga-smtp');
 
 		set_transient('mailniaga_test_email_result', [
 			'status_class' => $status_class,
@@ -84,7 +84,7 @@ class MailniagaConnector {
 	}
 
 	public function display_test_email_result() {
-		if (!isset($_GET['page']) || $_GET['page'] !== 'mailniaga-wp-connector' || !isset($_GET['mailniaga_test_email'])) {
+		if (!isset($_GET['page']) || $_GET['page'] !== 'mailniaga-smtp' || !isset($_GET['mailniaga_test_email'])) {
 			return;
 		}
 
@@ -98,9 +98,9 @@ class MailniagaConnector {
 		?>
         <div class="notice <?php echo esc_attr($result['status_class']); ?> is-dismissible">
             <p><strong><?php echo esc_html($result['status_message']); ?></strong></p>
-            <p><?php echo esc_html(sprintf(__('Time taken: %s seconds', 'mailniaga-wp-connector'), $result['time_taken'])); ?></p>
+            <p><?php echo esc_html(sprintf(__('Time taken: %s seconds', 'mailniaga-smtp'), $result['time_taken'])); ?></p>
 			<?php if (!empty($result['error_message'])): ?>
-                <p><?php echo esc_html(__('Error details:', 'mailniaga-wp-connector') . ' ' . $result['error_message']); ?></p>
+                <p><?php echo esc_html(__('Error details:', 'mailniaga-smtp') . ' ' . $result['error_message']); ?></p>
 			<?php endif; ?>
         </div>
 		<?php

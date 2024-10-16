@@ -24,10 +24,10 @@ class MailniagaSettings {
 		$icon_url = 'https://demo.dev-aplikasiniaga.com/wp-content/plugins/elementor-mailniaga/mailniaga.png';
 
 		add_menu_page(
-			__('Mail Niaga WP Connector', 'mailniaga-wp-connector'),
-			__('Mail Niaga WP', 'mailniaga-wp-connector'),
+			__('Mail Niaga SMTP', 'mailniaga-smtp'),
+			__('Mail Niaga SMTP', 'mailniaga-smtp'),
 			'manage_options',
-			'mailniaga-wp-connector',
+			'mailniaga-smtp',
 			[$this, 'render_admin_page'],
 			$icon_url,
 			100
@@ -35,7 +35,7 @@ class MailniagaSettings {
 	}
 
 	public function enqueue_admin_scripts($hook) {
-		if ($hook !== 'toplevel_page_mailniaga-wp-connector') {
+		if ($hook !== 'toplevel_page_mailniaga-smtp') {
 			return;
 		}
 
@@ -69,9 +69,9 @@ class MailniagaSettings {
 
 		add_settings_section(
 			'mailniaga_wp_connector_main',
-			__('Main Settings', 'mailniaga-wp-connector'),
+			__('Main Settings', 'mailniaga-smtp'),
 			null,
-			'mailniaga-wp-connector'
+			'mailniaga-smtp'
 		);
 
 		$this->add_settings_fields();
@@ -79,10 +79,10 @@ class MailniagaSettings {
 
 	private function add_settings_fields() {
 		$fields = [
-			'api_key' => __('Mail Niaga API Key', 'mailniaga-wp-connector'),
-			'from_email' => __('Default From Email', 'mailniaga-wp-connector'),
-			'from_name' => __('Default From Name', 'mailniaga-wp-connector'),
-			'webhook' => __('Webhook (Funnelkit Only)', 'mailniaga-wp-connector'),
+			'api_key' => __('Mail Niaga API Key', 'mailniaga-smtp'),
+			'from_email' => __('Default From Email', 'mailniaga-smtp'),
+			'from_name' => __('Default From Name', 'mailniaga-smtp'),
+			'webhook' => __('Webhook (Funnelkit Only)', 'mailniaga-smtp'),
 		];
 
 		foreach ($fields as $key => $label) {
@@ -90,7 +90,7 @@ class MailniagaSettings {
 				'mailniaga_' . $key,
 				$label,
 				[$this, $key . '_callback'],
-				'mailniaga-wp-connector',
+				'mailniaga-smtp',
 				'mailniaga_wp_connector_main'
 			);
 		}
@@ -98,9 +98,9 @@ class MailniagaSettings {
 
 	public function api_key_callback() {
 		$this->render_text_field('api_key');
-		echo '<button id="verify-api" class="button button-secondary">' . __('Verify', 'mailniaga-wp-connector') . '</button>';
+		echo '<button id="verify-api" class="button button-secondary">' . __('Verify', 'mailniaga-smtp') . '</button>';
 		echo '<div id="api-verification-results" style="display: none;">
-                <h4>' . __('Mail Niaga Account Details', 'mailniaga-wp-connector') . '</h4>
+                <h4>' . __('Mail Niaga Account Details', 'mailniaga-smtp') . '</h4>
                 <div id="api-details"></div>
               </div>';
 	}
@@ -128,13 +128,13 @@ class MailniagaSettings {
 		$button_style = !empty($webhook) ? ' style="display:none;"' : '';
 
 		echo "<input type='text' id='mailniaga_webhook' name='mailniaga_wp_connector_settings[webhook]' value='" . esc_attr($webhook) . "' class='regular-text'$readonly>";
-		echo "<button type='button' id='generate_webhook' class='button button-secondary'$button_style>" . __('Generate Webhook', 'mailniaga-wp-connector') . "</button>";
+		echo "<button type='button' id='generate_webhook' class='button button-secondary'$button_style>" . __('Generate Webhook', 'mailniaga-smtp') . "</button>";
 
 		if (!empty($webhook)) {
 			$callback_url = add_query_arg('webhook', $webhook, site_url('/' . MAILNIAGA_WP_CONNECTOR['SLUG'] . '/callback'));
-			echo "<button type='button' id='copy_webhook_url' class='button button-secondary' style='margin-left: 10px;'>" . __('Copy URL', 'mailniaga-wp-connector') . "</button>";
-			echo "<p style='margin-top: 13px'><strong>" . __('Callback URL:', 'mailniaga-wp-connector') . "</strong> <code id='webhook_callback_url'>$callback_url</code></p>";
-			echo "<p style='margin-top: 5px; font-style: italic;'>" . __('For FunnelKit: This callback URL will be used to automatically unsubscribe emails that are not delivered.', 'mailniaga-wp-connector') . "</p>";
+			echo "<button type='button' id='copy_webhook_url' class='button button-secondary' style='margin-left: 10px;'>" . __('Copy URL', 'mailniaga-smtp') . "</button>";
+			echo "<p style='margin-top: 13px'><strong>" . __('Callback URL:', 'mailniaga-smtp') . "</strong> <code id='webhook_callback_url'>$callback_url</code></p>";
+			echo "<p style='margin-top: 5px; font-style: italic;'>" . __('For FunnelKit: This callback URL will be used to automatically unsubscribe emails that are not delivered.', 'mailniaga-smtp') . "</p>";
 		}
 	}
 
@@ -166,17 +166,17 @@ class MailniagaSettings {
 				settings_fields('mailniaga_wp_connector_settings');
 				?>
                 <div class="mailniaga-settings-section">
-					<?php do_settings_sections('mailniaga-wp-connector'); ?>
+					<?php do_settings_sections('mailniaga-smtp'); ?>
                 </div>
 				<?php submit_button('Save Settings', 'mailniaga-submit-button'); ?>
             </form>
             <div class="mailniaga-test-email-section">
-                <h2><?php _e('Test Email', 'mailniaga-wp-connector'); ?></h2>
+                <h2><?php _e('Test Email', 'mailniaga-smtp'); ?></h2>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="mailniaga-settings-form">
                     <input type="hidden" name="action" value="mailniaga_send_test_email">
 					<?php wp_nonce_field('mailniaga_test_email', 'mailniaga_test_email_nonce'); ?>
                     <div class="mailniaga-settings-field">
-                        <label for="test_email"><?php _e('Recipient Email', 'mailniaga-wp-connector'); ?></label>
+                        <label for="test_email"><?php _e('Recipient Email', 'mailniaga-smtp'); ?></label>
                         <input type="email" id="test_email" name="test_email" value="<?php echo esc_attr(get_option('admin_email')); ?>" required>
                     </div>
 					<?php submit_button('Send Test Email', 'secondary mailniaga-submit-button', 'send_test_email'); ?>
@@ -226,9 +226,9 @@ class MailniagaSettings {
 			$admin_bar->add_menu([
 				'id'    => 'mailniaga-credit-balance',
 				'title' => 'Mail Niaga Balance: ' . number_format($credit_balance),
-				'href'  => admin_url('admin.php?page=mailniaga-wp-connector'),
+				'href'  => admin_url('admin.php?page=mailniaga-smtp'),
 				'meta'  => [
-					'title' => __('Mail Niaga Credit Balance', 'mailniaga-wp-connector'),
+					'title' => __('Mail Niaga Credit Balance', 'mailniaga-smtp'),
 					'class' => 'mailniaga-credit-balance-item'
 				],
 			]);

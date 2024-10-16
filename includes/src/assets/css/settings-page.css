@@ -178,6 +178,10 @@ margin-left:10px;
     cursor: not-allowed;
 }
 
+.button-secondary{
+    margin-top: 0px !important;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 600px) {

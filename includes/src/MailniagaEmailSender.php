@@ -205,8 +205,8 @@ class MailniagaEmailSender {
 	}
 
 	public function send_test_email($to): array {
-		$subject = __('Mailniaga WP Connector Test Email', 'mailniaga-wp-connector');
-		$message = __('This is a test email sent from the Mailniaga WP Connector plugin.', 'mailniaga-wp-connector');
+		$subject = __('Mailniaga WP Connector Test Email', 'mailniaga-smtp');
+		$message = __('This is a test email sent from the Mailniaga WP Connector plugin.', 'mailniaga-smtp');
 
 		$start_time = microtime(true);
 		$result = wp_mail($to, $subject, $message);

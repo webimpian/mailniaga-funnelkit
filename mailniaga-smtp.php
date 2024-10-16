@@ -1,6 +1,6 @@
 <?php
 /**
- * Mail Niaga WP Connector.
+ * Mail Niaga SMTP.
  *
  * @author  Web Impian
  * @license GPLv3
@@ -10,9 +10,9 @@
 
 /*
  * @wordpress-plugin
- * Plugin Name:         Mail Niaga WP Connector
+ * Plugin Name:         Mail Niaga SMTP
  * Plugin URI:          https://mailniaga.com
- * Version:             1.0.0
+ * Version:             2.0.0
  * Description:         Streamline your WordPress email delivery with Mail Niaga API integration. Boost email deliverability, track performance, and ensure reliable SMTP service for all your website's outgoing emails.
  * Author:              Web Impian
  * Author URI:          https://webimpian.com
@@ -21,7 +21,7 @@
  * Requires PHP:        7.4
  * License:             GPLv3
  * License URI:         https://www.gnu.org/licenses/gpl-3.0.txt
- * Text Domain:         mailniaga-wp-connector
+ * Text Domain:         mailniaga-smtp
  * Domain Path:         /languages
  */
 
@@ -32,12 +32,12 @@ defined('ABSPATH') || exit;
 define(
 	'MAILNIAGA_WP_CONNECTOR',
 	[
-		'SLUG'     => 'mailniaga-wp-connector',
+		'SLUG'     => 'mailniaga-smtp',
 		'FILE'     => __FILE__,
 		'HOOK'     => plugin_basename(__FILE__),
 		'PATH'     => realpath(plugin_dir_path(__FILE__)),
 		'URL'      => trailingslashit(plugin_dir_url(__FILE__)),
-		'VERSION'  => '1.0.0',
+		'VERSION'  => '2.0.0',
 	]
 );
 
@@ -65,7 +65,7 @@ add_action('plugins_loaded', function() {
 });
 
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), function($links) {
-	$settings_link = '<a href="' . admin_url('admin.php?page=mailniaga-wp-connector') . '">' . __('Settings', 'mailniaga-wp-connector') . '</a>';
+	$settings_link = '<a href="' . admin_url('admin.php?page=mailniaga-smtp') . '">' . __('Settings', 'mailniaga-smtp') . '</a>';
 	array_unshift($links, $settings_link);
 	return $links;
 });

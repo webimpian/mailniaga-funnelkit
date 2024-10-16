@@ -3,7 +3,7 @@ namespace Webimpian\MailniagaWPConnector;
 
 class WebhookHandler {
 	private MailniagaSettings $settings;
-	private const WEBHOOK_PATH = '/mailniaga-wp-connector/callback';
+	private const WEBHOOK_PATH = '/mailniaga-smtp/callback';
 
 	public function __construct(MailniagaSettings $settings) {
 		$this->settings = $settings;

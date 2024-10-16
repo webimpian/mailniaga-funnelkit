@@ -12,11 +12,11 @@ class MailniagaFailedDeliveriesLog {
 
 	public function add_submenu_page() {
 		$hook = add_submenu_page(
-			'mailniaga-wp-connector',
-			__('Failed Deliveries', 'mailniaga-wp-connector'),
-			__('Failed Deliveries', 'mailniaga-wp-connector'),
+			'mailniaga-smtp',
+			__('Failed Deliveries', 'mailniaga-smtp'),
+			__('Failed Deliveries', 'mailniaga-smtp'),
 			'manage_options',
-			'mailniaga-wp-connector-failed-deliveries',
+			'mailniaga-smtp-failed-deliveries',
 			[$this, 'render_failed_deliveries_page']
 		);
 		add_action("load-$hook", [$this, 'screen_option']);
@@ -27,7 +27,7 @@ class MailniagaFailedDeliveriesLog {
 	}
 
 	public function enqueue_scripts($hook) {
-		if (strpos($hook, 'mailniaga-wp-connector-failed-deliveries') === false) {
+		if (strpos($hook, 'mailniaga-smtp-failed-deliveries') === false) {
 			return;
 		}
 
@@ -46,26 +46,26 @@ class MailniagaFailedDeliveriesLog {
 
 		?>
         <div class="wrap">
-            <h1><?php echo esc_html(__('Failed Deliveries', 'mailniaga-wp-connector')); ?></h1>
+            <h1><?php echo esc_html(__('Failed Deliveries', 'mailniaga-smtp')); ?></h1>
 
             <table class="wp-list-table widefat fixed striped mailniaga-email-log-table">
                 <thead>
                 <tr>
-                    <th><?php _e('ID', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('Domain', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('To Email', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('From Email', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('MX', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('Response', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('Created At', 'mailniaga-wp-connector'); ?></th>
-                    <th><?php _e('Unsubscribed', 'mailniaga-wp-connector'); ?></th>
+                    <th><?php _e('ID', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('Domain', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('To Email', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('From Email', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('MX', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('Response', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('Created At', 'mailniaga-smtp'); ?></th>
+                    <th><?php _e('Unsubscribed', 'mailniaga-smtp'); ?></th>
                 </tr>
                 </thead>
                 <tbody>
 				<?php if (empty($failed_deliveries)): ?>
                     <tr>
                         <td colspan="9" style="text-align: center;">
-							<?php _e('No failed deliveries found.', 'mailniaga-wp-connector'); ?>
+							<?php _e('No failed deliveries found.', 'mailniaga-smtp'); ?>
                         </td>
                     </tr>
 				<?php else: ?>
@@ -78,7 +78,7 @@ class MailniagaFailedDeliveriesLog {
                             <td><?php echo esc_html($delivery->mx); ?></td>
                             <td><?php echo esc_html($delivery->delivery_response); ?></td>
                             <td><?php echo esc_html($delivery->created_at); ?></td>
-                            <td><?php echo $delivery->unsubscribed ? __('Yes', 'mailniaga-wp-connector') : __('No', 'mailniaga-wp-connector'); ?></td>
+                            <td><?php echo $delivery->unsubscribed ? __('Yes', 'mailniaga-smtp') : __('No', 'mailniaga-smtp'); ?></td>
                         </tr>
 					<?php endforeach; ?>
 				<?php endif; ?>
@@ -110,7 +110,7 @@ class MailniagaFailedDeliveriesLog {
 		$total_pages = ceil($total_items / $this->per_page);
 
 		echo '<div class="tablenav"><div class="tablenav-pages">';
-		echo '<span class="displaying-num">' . sprintf(_n('%s item', '%s items', $total_items, 'mailniaga-wp-connector'), number_format_i18n($total_items)) . '</span>';
+		echo '<span class="displaying-num">' . sprintf(_n('%s item', '%s items', $total_items, 'mailniaga-smtp'), number_format_i18n($total_items)) . '</span>';
 
 		echo '<span class="pagination-links">';
 
@@ -123,9 +123,9 @@ class MailniagaFailedDeliveriesLog {
 		}
 
 		echo '<span class="paging-input">';
-		echo '<label for="current-page-selector" class="screen-reader-text">' . __('Current Page', 'mailniaga-wp-connector') . '</label>';
+		echo '<label for="current-page-selector" class="screen-reader-text">' . __('Current Page', 'mailniaga-smtp') . '</label>';
 		echo '<input class="current-page" id="current-page-selector" type="text" name="paged" value="' . esc_attr($page) . '" size="1" aria-describedby="table-paging">';
-		echo '<span class="tablenav-paging-text"> ' . __('of', 'mailniaga-wp-connector') . ' <span class="total-pages">' . number_format_i18n($total_pages) . '</span></span>';
+		echo '<span class="tablenav-paging-text"> ' . __('of', 'mailniaga-smtp') . ' <span class="total-pages">' . number_format_i18n($total_pages) . '</span></span>';
 		echo '</span>';
 
 		if ($page < $total_pages) {
