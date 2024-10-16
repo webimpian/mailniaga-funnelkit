@@ -1,4 +1,4 @@
-=== Mail Niaga SMTP ===
+=== MailNiaga SMTP ===
 Contributors: webimpian
 Tags: SMTP, email, wp_mail, mailniaga, api
 Requires at least: 5.6

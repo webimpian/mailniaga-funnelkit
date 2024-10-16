@@ -63,6 +63,12 @@ class MailniagaSettings {
 		$this->add_settings_fields();
 	}
 
+	public function save_options($new_options) {
+		$sanitized_options = $this->sanitize($new_options[$this->option_name]);
+		$this->options = array_merge($this->options, $sanitized_options);
+		update_option($this->option_name, $this->options);
+	}
+
 	private function add_settings_fields() {
 		// General Settings
 		add_settings_field(
